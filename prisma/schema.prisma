@@ -1,0 +1,34 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  password  String
+  role      String   @default("STUDENT")
+  ticket    Ticket?  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Ticket {
+  id             String   @id @default(uuid())
+  userId         String   @unique
+  user           User     @relation(fields: [userId], references: [id])
+  paymentStatus  String   @default("PENDING")
+  qrCode         String?  
+  isCheckedIn    Boolean  @default(false)
+  checkInTime    DateTime?
+  checkedInBy    String?  
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
