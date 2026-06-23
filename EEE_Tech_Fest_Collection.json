@@ -1,0 +1,60 @@
+{
+  "info": {
+    "name": "IEEE Tech Fest API",
+    "description": "Core endpoints for registration, payment, and gate check-in.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1. Student Register",
+      "request": {
+        "method": "POST",
+        "header": [ { "key": "Content-Type", "value": "application/json" } ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Prabhjot Singh\",\n  \"email\": \"prabhjot@example.com\",\n  \"password\": \"securepassword123\",\n  \"role\": \"STUDENT\"\n}"
+        },
+        "url": { "raw": "http://localhost:3000/api/auth/register", "protocol": "http", "host": ["localhost"], "port": "3000", "path": ["api", "auth", "register"] }
+      }
+    },
+    {
+      "name": "2. Student Login",
+      "request": {
+        "method": "POST",
+        "header": [ { "key": "Content-Type", "value": "application/json" } ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"prabhjot@example.com\",\n  \"password\": \"securepassword123\"\n}"
+        },
+        "url": { "raw": "http://localhost:3000/api/auth/login", "protocol": "http", "host": ["localhost"], "port": "3000", "path": ["api", "auth", "login"] }
+      }
+    },
+    {
+      "name": "3. Generate Ticket",
+      "request": {
+        "auth": { "type": "bearer", "bearer": [ { "key": "token", "value": "<YOUR_STUDENT_TOKEN>", "type": "string" } ] },
+        "method": "POST",
+        "header": [],
+        "url": { "raw": "http://localhost:3000/api/events/register-fest", "protocol": "http", "host": ["localhost"], "port": "3000", "path": ["api", "events", "register-fest"] }
+      }
+    },
+    {
+      "name": "4. Process Payment",
+      "request": {
+        "auth": { "type": "bearer", "bearer": [ { "key": "token", "value": "<YOUR_STUDENT_TOKEN>", "type": "string" } ] },
+        "method": "POST",
+        "header": [],
+        "url": { "raw": "http://localhost:3000/api/events/payment/<YOUR_TICKET_ID>", "protocol": "http", "host": ["localhost"], "port": "3000", "path": ["api", "events", "payment", "<YOUR_TICKET_ID>"] }
+      }
+    },
+    {
+      "name": "5. Volunteer Check-in",
+      "request": {
+        "auth": { "type": "bearer", "bearer": [ { "key": "token", "value": "<YOUR_VOLUNTEER_TOKEN>", "type": "string" } ] },
+        "method": "POST",
+        "header": [],
+        "url": { "raw": "http://localhost:3000/api/events/admin/checkin/<YOUR_TICKET_ID>", "protocol": "http", "host": ["localhost"], "port": "3000", "path": ["api", "events", "admin", "checkin", "<YOUR_TICKET_ID>"] }
+      }
+    }
+  ]
+}

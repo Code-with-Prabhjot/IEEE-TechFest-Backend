@@ -1,15 +1,23 @@
 // src/routes/ticketRoutes.ts
 import { Router } from 'express';
-import { registerForEvent, getMyTicket, getAllRegistrations } from '../controllers/ticketController';
+import { 
+  registerForEvent, 
+  getMyTicket, 
+  getAllRegistrations, 
+  simulatePayment, 
+  checkInTicket 
+} from '../controllers/ticketController';
 import { authenticateJWT, requireRole } from '../middleware/authMiddleware';
 
 const router = Router();
 
-// Student-accessible routes (Must be authenticated)
+// --- STUDENT ROUTES ---
 router.post('/register-fest', authenticateJWT, registerForEvent);
 router.get('/my-ticket', authenticateJWT, getMyTicket);
+router.post('/payment/:ticketId', authenticateJWT, simulatePayment);
 
-// Volunteer-only routes (Must be authenticated AND a volunteer)
+// --- VOLUNTEER ROUTES ---
 router.get('/admin/all-tickets', authenticateJWT, requireRole(['VOLUNTEER']), getAllRegistrations);
+router.post('/admin/checkin/:ticketId', authenticateJWT, requireRole(['VOLUNTEER']), checkInTicket);
 
 export default router;
