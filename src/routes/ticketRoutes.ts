@@ -5,7 +5,8 @@ import {
   getMyTicket, 
   getAllRegistrations, 
   simulatePayment, 
-  checkInTicket 
+  checkInTicket,
+  exportRegistrationsCsv 
 } from '../controllers/ticketController';
 import { authenticateJWT, requireRole } from '../middleware/authMiddleware';
 
@@ -19,5 +20,6 @@ router.post('/payment/:ticketId', authenticateJWT, simulatePayment);
 // --- VOLUNTEER ROUTES ---
 router.get('/admin/all-tickets', authenticateJWT, requireRole(['VOLUNTEER']), getAllRegistrations);
 router.post('/admin/checkin/:ticketId', authenticateJWT, requireRole(['VOLUNTEER']), checkInTicket);
+router.get('/admin/export-csv', authenticateJWT, requireRole(['VOLUNTEER']), exportRegistrationsCsv);
 
 export default router;

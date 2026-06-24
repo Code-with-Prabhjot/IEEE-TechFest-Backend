@@ -109,7 +109,6 @@ export const simulatePayment = async (req: Request, res: Response): Promise<void
 export const checkInTicket = async (req: Request, res: Response): Promise<void> => {
   try {
     const volunteerId = req.user?.id;
-    // THE FIX: Explicitly cast ticketId as a string
     const ticketId = req.params.ticketId as string;
 
     const ticket = await prisma.ticket.findUnique({ where: { id: ticketId } });
@@ -138,8 +137,47 @@ export const checkInTicket = async (req: Request, res: Response): Promise<void> 
       },
     });
 
+    // --- DAY 4: SECURITY AUDIT LOG ---
+    await prisma.auditLog.create({
+      data: {
+        action: 'TICKET_CHECK_IN',
+        details: `Ticket ${ticketId} successfully scanned and admitted.`,
+        performedBy: volunteerId as string,
+      },
+    });
+
     res.status(200).json({ message: 'Check-in successful! Student granted entry.', ticket: checkedInTicket });
   } catch (error) {
     res.status(500).json({ error: 'Internal server error during check-in.' });
+  }
+};
+
+// 6. Export Registrations as CSV (Volunteer Only)
+export const exportRegistrationsCsv = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const tickets = await prisma.ticket.findMany({
+      include: { user: true },
+    });
+
+    // 1. Create the CSV Header row
+    let csv = 'Ticket ID,Student Name,Email,Payment Status,Checked In,Check-in Time\n';
+
+    // 2. Loop through all tickets and add them as rows
+    tickets.forEach(ticket => {
+      // We wrap text in quotes just in case someone has a comma in their name!
+      const name = `"${ticket.user.name}"`; 
+      const email = `"${ticket.user.email}"`;
+      const checkInTime = ticket.checkInTime ? ticket.checkInTime.toISOString() : 'N/A';
+      
+      csv += `${ticket.id},${name},${email},${ticket.paymentStatus},${ticket.isCheckedIn},${checkInTime}\n`;
+    });
+
+    // 3. Tell the client to download this as a file instead of showing JSON
+    res.header('Content-Type', 'text/csv');
+    res.attachment('techfest_registrations.csv');
+    res.status(200).send(csv);
+
+  } catch (error) {
+    res.status(500).json({ error: 'Internal server error during CSV export.' });
   }
 };

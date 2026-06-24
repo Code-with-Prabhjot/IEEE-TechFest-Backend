@@ -10,41 +10,38 @@ const JWT_SECRET = process.env.JWT_SECRET || 'fallback_secret';
 
 export const register = async (req: Request, res: Response): Promise<void> => {
   try {
-    // 1. Validate incoming data against our Zod schema
-    const parseResult = registerSchema.safeParse(req.body);
-    if (!parseResult.success) {
-      res.status(400).json({ error: parseResult.error.issues[0].message });
-      return;
+    // Notice we added 'secretKey' to what we extract from the body
+    const { name, email, password, role, secretKey } = req.body;
+
+    // --- SECURITY PATCH: Block unauthorized volunteers ---
+    if (role === 'VOLUNTEER') {
+      if (secretKey !== process.env.VOLUNTEER_SECRET_KEY) {
+        res.status(403).json({ error: 'Forbidden: Invalid Volunteer Secret Key.' });
+        return;
+      }
     }
 
-    const { name, email, password, role } = parseResult.data;
-
-    // 2. Prevent duplicate accounts (Crucial Edge Case)
+    // Check if user already exists
     const existingUser = await prisma.user.findUnique({ where: { email } });
     if (existingUser) {
-      res.status(409).json({ error: 'A user with this email already exists' });
+      res.status(409).json({ error: 'User with this email already exists' });
       return;
     }
 
-    // 3. Hash the password for security
+    // Hash the password and save the user
     const hashedPassword = await bcrypt.hash(password, 10);
-
-    // 4. Save the User in the database
     const newUser = await prisma.user.create({
       data: {
         name,
         email,
         password: hashedPassword,
-        role: role || 'STUDENT',
+        role: role || 'STUDENT', // Defaults to STUDENT if left blank
       },
     });
 
-    res.status(201).json({
-      message: 'User registered successfully!',
-      user: { id: newUser.id, name: newUser.name, email: newUser.email, role: newUser.role },
-    });
+    res.status(201).json({ message: 'User registered successfully', userId: newUser.id });
   } catch (error) {
-    res.status(500).json({ error: 'Internal server error during registration' });
+    res.status(500).json({ error: 'Internal server error' });
   }
 };
 
