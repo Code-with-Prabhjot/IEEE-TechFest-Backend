@@ -5,6 +5,7 @@ import dotenv from 'dotenv';
 import rateLimit from 'express-rate-limit';
 import authRoutes from './routes/authRoutes';
 import ticketRoutes from './routes/ticketRoutes';
+import path from 'path';
 
 dotenv.config();
 
@@ -13,6 +14,9 @@ const PORT = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(express.json());
+// --- FRONTEND INTEGRATION ---
+// Serve static frontend files (HTML, CSS, JS)
+app.use(express.static(path.join(__dirname, '../public')));
 
 // --- SECURITY: Rate Limiting ---
 // This stops bots from spamming your API and crashing the server

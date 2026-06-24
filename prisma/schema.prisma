@@ -10,27 +10,43 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(uuid())
-  name      String
-  email     String   @unique
-  password  String
-  role      String   @default("STUDENT")
-  ticket    Ticket?  
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id              String       @id @default(uuid())
+  name            String
+  email           String       @unique
+  password        String
+  role            String       @default("STUDENT") 
+  createdAt       DateTime     @default(now())
+  
+  // A user can lead many tickets, and be a teammate on many tickets
+  tickets         Ticket[]     @relation("TicketLeader")
+  teamMemberships TeamMember[] @relation("TeammateLink")
 }
 
 model Ticket {
-  id             String   @id @default(uuid())
-  userId         String   @unique
-  user           User     @relation(fields: [userId], references: [id])
-  paymentStatus  String   @default("PENDING")
-  qrCode         String?  
-  isCheckedIn    Boolean  @default(false)
-  checkInTime    DateTime?
-  checkedInBy    String?  
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  id            String       @id @default(uuid())
+  userId        String       // Leader's ID
+  user          User         @relation("TicketLeader", fields: [userId], references: [id])
+  
+  eventName     String       // e.g., "48HR AI Hackathon"
+  isTeam        Boolean      @default(false)
+  totalAmount   Int          // Solo = 200, Team = 600
+  
+  teamMembers   TeamMember[] // The linked teammates
+  
+  paymentStatus String       @default("PENDING")
+  qrCode        String?
+  isCheckedIn   Boolean      @default(false)
+  checkInTime   DateTime?
+  checkedInBy   String?
+}
+
+model TeamMember {
+  id        String  @id @default(uuid())
+  ticketId  String
+  ticket    Ticket  @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  
+  userId    String  // Link to the pre-registered teammate's account
+  user      User    @relation("TeammateLink", fields: [userId], references: [id])
 }
 
 // An un-erasable audit log for event security

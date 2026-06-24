@@ -5,57 +5,101 @@ import QRCode from 'qrcode';
 
 const prisma = new PrismaClient();
 
-// 1. Register for the Tech Fest
+// 1. Generate Event Ticket with Teammate Validation
 export const registerForEvent = async (req: Request, res: Response): Promise<void> => {
   try {
-    const userId = req.user?.id;
-    if (!userId) {
-      res.status(401).json({ error: 'Unauthorized user context.' });
+    const leaderId = req.user?.id;
+    const { eventName, isTeam, teammateEmails } = req.body;
+
+    if (!leaderId) {
+      res.status(401).json({ error: 'Unauthorized: Please login first.' });
       return;
     }
 
-    const existingTicket = await prisma.ticket.findUnique({ where: { userId } });
+    // Dynamic Pricing Logic (Solo vs Team)
+    let totalAmount = isTeam ? 600 : 200; 
+
+    // Prevent double-booking the same event
+    const existingTicket = await prisma.ticket.findFirst({
+      where: { userId: leaderId, eventName }
+    });
+    
     if (existingTicket) {
-      res.status(409).json({ error: 'You have already registered for this tech fest.' });
+      res.status(400).json({ error: `You are already registered for ${eventName}.` });
       return;
     }
 
+    // Validate Teammates (MUST exist in database)
+    const teamMembersData = [];
+    if (isTeam && teammateEmails && Array.isArray(teammateEmails)) {
+      if (teammateEmails.length > 3) {
+        res.status(400).json({ error: 'Maximum 3 teammates allowed (4 members total).' });
+        return;
+      }
+
+      for (const email of teammateEmails) {
+        const teammate = await prisma.user.findUnique({ where: { email } });
+        if (!teammate) {
+          res.status(404).json({ error: `User with email ${email} does not exist. They must create an account first!` });
+          return;
+        }
+        if (teammate.id === leaderId) {
+          res.status(400).json({ error: 'You cannot add yourself as a teammate.' });
+          return;
+        }
+        teamMembersData.push({ userId: teammate.id });
+      }
+    }
+
+    // Create the Ticket and link everyone
     const newTicket = await prisma.ticket.create({
-      data: { userId, paymentStatus: 'PENDING' },
+      data: {
+        userId: leaderId,
+        eventName,
+        isTeam,
+        totalAmount,
+        teamMembers: {
+          create: teamMembersData
+        }
+      },
+      include: { teamMembers: { include: { user: true } } }
     });
 
-    const qrCodeDataUrl = await QRCode.toDataURL(`techfest-ticket:${newTicket.id}`);
-
-    const updatedTicket = await prisma.ticket.update({
-      where: { id: newTicket.id },
-      data: { qrCode: qrCodeDataUrl },
-    });
-
-    res.status(201).json({
-      message: 'Registration initiated successfully! Complete payment to activate your ticket.',
-      ticket: updatedTicket,
+    res.status(201).json({ 
+      message: `${eventName} registration successful! Proceed to payment.`, 
+      ticketId: newTicket.id,
+      totalAmount: newTicket.totalAmount,
+      team: newTicket.teamMembers.map((tm: any) => tm.user.email) // Strict typing added here!
     });
   } catch (error) {
-    res.status(500).json({ error: 'Internal server error during event registration.' });
+    console.error("Registration Error:", error);
+    res.status(500).json({ error: 'Internal server error during registration.' });
   }
 };
 
-// 2. View My Own Ticket
+// 2. View My Tickets (Updated for Multiple Events)
 export const getMyTicket = async (req: Request, res: Response): Promise<void> => {
   try {
     const userId = req.user?.id;
-    const ticket = await prisma.ticket.findUnique({
-      where: { userId },
-      include: { user: { select: { name: true, email: true } } },
-    });
-
-    if (!ticket) {
-      res.status(404).json({ error: 'No ticket registration found for your account.' });
+    if (!userId) {
+      res.status(401).json({ error: 'Unauthorized' });
       return;
     }
-    res.status(200).json({ ticket });
+
+    // CHANGED: We now use findMany instead of findUnique to get all their event passes!
+    const tickets = await prisma.ticket.findMany({
+      where: { userId },
+      include: { teamMembers: { include: { user: true } } }
+    });
+
+    if (!tickets || tickets.length === 0) {
+      res.status(404).json({ error: 'No tickets found.' });
+      return;
+    }
+
+    res.status(200).json({ tickets });
   } catch (error) {
-    res.status(500).json({ error: 'Internal server error while fetching your ticket.' });
+    res.status(500).json({ error: 'Internal server error while fetching tickets.' });
   }
 };
 
