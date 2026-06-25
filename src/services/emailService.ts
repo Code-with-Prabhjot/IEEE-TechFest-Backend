@@ -2,8 +2,8 @@ import nodemailer from 'nodemailer';
 
 const transporter = nodemailer.createTransport({
   host: "smtp.gmail.com",
-  port: 465,
-  secure: true, // Use SSL to bypass standard port blocks
+  port: 587,      // 1. CHANGED: The modern SMTP port
+  secure: false,  // 2. CHANGED: Must be false for 587 (it upgrades to secure automatically)
   family: 4, // <-- THIS FORCES IPv4 AND FIXES THE 2-MINUTE TIMEOUT
   auth: {
     user: process.env.EMAIL_USER,
