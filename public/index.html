@@ -268,6 +268,7 @@
     </div>
 
     <script>
+        let currentTicketIdToPay = null;
         let studentToken = localStorage.getItem('token') || '';
         let pendingTicketId = '';
         let orgToken = '';
@@ -439,43 +440,49 @@
             } catch(e) { showStatus(status, `❌ ${e.message}`, "red-500"); }
         }
 
-        async function processPayment(ticketId) {
-    const payButton = document.getElementById("pay-btn"); // Ensure this matches your button's ID
+        // 1. Notice the brackets are empty now! We don't ask the button for the ID anymore.
+        async function processPayment() { 
+            // 2. We grab the ID directly from the variable you already created
+            const ticketId = pendingTicketId; 
 
-    // 1. Instantly disable the button and change the text
-    payButton.disabled = true;
-    payButton.innerText = "Processing UPI...";
-    payButton.style.opacity = "0.5"; 
-    payButton.style.cursor = "not-allowed";
+            // Safety check just in case
+            if (!ticketId) {
+                alert("Error: Ticket ID is missing. Please register again.");
+                return;
+            }
 
-    try {
-    payButton.disabled = true; // Disable immediately
-    
-    const response = await fetch(`https://nexus-backend-acmg.onrender.com/api/tickets/${ticketId}/pay`, {
-        method: 'POST',
-        headers: {
-            'Authorization': `Bearer ${studentToken}`
+            const payButton = document.getElementById("pay-btn"); 
+            payButton.disabled = true;
+            payButton.innerText = "Processing UPI...";
+            payButton.style.opacity = "0.5"; 
+            payButton.style.cursor = "not-allowed";
+
+            try {
+                // 3. Using your full Render URL and the correct studentToken variable!
+                const response = await fetch(`https://nexus-backend-acmg.onrender.com/api/tickets/${ticketId}/pay`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${studentToken}` 
+                    }
+                });
+
+                if (response.ok) {
+                    payButton.innerText = "Payment Successful!";
+                    // 4. Removed the loadMyTickets() call. Just redirect!
+                    window.location.href = "/my-tickets.html"; 
+                } else {
+                    throw new Error("Payment Failed");
+                }
+            } catch (error) {
+                console.error("Payment Error:", error);
+                payButton.disabled = false;
+                payButton.innerText = "TRY AGAIN";
+                payButton.style.opacity = "1";
+                payButton.style.cursor = "pointer";
+                alert("Payment failed. Please check your connection and try again.");
+            }
         }
-    });
-
-    if (response.ok) {
-        // SUCCESS: Redirect or show success modal
-        payButton.innerText = "Payment Successful!";
-        window.location.href = "/my-tickets.html"; // Or wherever your tickets page is
-    } else {
-        // Trigger catch if response is 400/500
-        throw new Error("Payment Failed");
-    }
-    } catch (error) {
-        // Re-enable only on failure
-        payButton.disabled = false;
-        payButton.innerText = "TRY AGAIN";
-        payButton.style.opacity = "1";
-        payButton.style.cursor = "pointer";
-        alert("Payment failed. Please check your connection and try again.");
-
-    }
-}
 
         // --- DASHBOARD & TICKET UTILITIES ---
 
