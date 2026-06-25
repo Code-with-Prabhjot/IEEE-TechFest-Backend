@@ -469,8 +469,7 @@
 
                 if (response.ok) {
                     payButton.innerText = "Payment Successful!";
-                    // 4. Removed the loadMyTickets() call. Just redirect!
-                    window.location.href = "/my-tickets.html"; 
+                    await loadMyTickets();
                 } else {
                     throw new Error("Payment Failed");
                 }
