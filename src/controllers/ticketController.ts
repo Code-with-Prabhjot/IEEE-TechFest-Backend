@@ -155,8 +155,13 @@ export const simulatePayment = async (req: Request, res: Response): Promise<void
       data: { paymentStatus: 'COMPLETED' },
     });
 
-    // TRIGGER THE EMAIL SERVICE HERE
+    // Replace your current email trigger with this:
+  try {
     await sendTicketEmail(ticket.user.email, ticket.eventName, ticket.id, ticket.qrCode || '');
+  } catch (mailError) {
+    console.error("Ticket generated, but email failed to send:", mailError);
+    // We don't return an error to the user here, we just log it and let them proceed!
+  }
 
     res.status(200).json({ message: 'Payment successful!', ticket: paidTicket });
   } catch (error) {
