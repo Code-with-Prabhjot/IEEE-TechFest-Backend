@@ -2,6 +2,7 @@
 import { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import QRCode from 'qrcode';
+import { sendTicketEmail } from '../services/emailService';
 
 const prisma = new PrismaClient();
 
@@ -122,7 +123,18 @@ export const simulatePayment = async (req: Request, res: Response): Promise<void
     // THE FIX: Explicitly cast ticketId as a string
     const ticketId = req.params.ticketId as string;
 
-    const ticket = await prisma.ticket.findUnique({ where: { id: ticketId } });
+    // Use this inside your findUnique or findMany block
+    const ticket = await prisma.ticket.findUnique({
+      where: { id: ticketId },
+      include: {
+        user: true, // If this is still red, hover over 'user' and see if it gives a quick-fix
+        teamMembers: {
+          include: {
+            user: true
+          }
+        }
+      }
+    });
 
     if (!ticket) {
       res.status(404).json({ error: 'Ticket not found.' });
@@ -142,6 +154,9 @@ export const simulatePayment = async (req: Request, res: Response): Promise<void
       where: { id: ticketId },
       data: { paymentStatus: 'COMPLETED' },
     });
+
+    // TRIGGER THE EMAIL SERVICE HERE
+    await sendTicketEmail(ticket.user.email, ticket.eventName, ticket.id, ticket.qrCode || '');
 
     res.status(200).json({ message: 'Payment successful!', ticket: paidTicket });
   } catch (error) {
