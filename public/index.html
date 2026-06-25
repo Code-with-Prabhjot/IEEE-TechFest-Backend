@@ -439,26 +439,45 @@
             } catch(e) { showStatus(status, `❌ ${e.message}`, "red-500"); }
         }
 
-        async function processPayment() {
-            const btn = document.getElementById('pay-btn');
-            const status = document.getElementById('pay-status');
-            btn.innerHTML = 'Processing UPI...';
-            btn.classList.replace('bg-green-600', 'bg-slate-600');
+        async function processPayment(ticketId) {
+    const payButton = document.getElementById("pay-btn"); // Ensure this matches your button's ID
 
-            try {
-                await new Promise(r => setTimeout(r, 1500)); 
-                const res = await fetch(`/api/events/payment/${pendingTicketId}`, {
-                    method: 'POST', headers: { 'Authorization': `Bearer ${studentToken}` }
-                });
-                if(!res.ok) throw new Error("Payment failed");
-                
-                loadMyTickets(pendingTicketId); 
-            } catch(e) {
-                showStatus(status, "❌ Payment Failed", "red-500");
-                btn.innerHTML = 'TRY AGAIN';
-                btn.classList.replace('bg-slate-600', 'bg-green-600');
+    // 1. Instantly disable the button and change the text
+    payButton.disabled = true;
+    payButton.innerText = "Processing UPI...";
+    payButton.style.opacity = "0.5"; 
+    payButton.style.cursor = "not-allowed";
+
+    try {
+        // 2. The actual API call to your backend
+        const response = await fetch(`/api/tickets/${ticketId}/pay`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}` // Adjust this if your token is stored differently
             }
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            // Handle success (e.g., show the QR code or reload the passes)
+            console.log("Payment successful!", data);
+            // Add your success screen logic here
+        } else {
+            // Trigger the catch block if the backend returned an error
+            throw new Error(data.error || "Payment failed"); 
         }
+
+    } catch (error) {
+        console.error("Payment Error:", error);
+        // 3. ONLY re-enable the button if the payment actually failed
+        payButton.disabled = false;
+        payButton.innerText = "TRY AGAIN";
+        payButton.style.opacity = "1";
+        payButton.style.cursor = "pointer";
+    }
+}
 
         // --- DASHBOARD & TICKET UTILITIES ---
         async function loadMyTickets(filterId = null) {

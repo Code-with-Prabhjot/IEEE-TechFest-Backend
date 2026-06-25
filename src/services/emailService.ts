@@ -4,6 +4,7 @@ const transporter = nodemailer.createTransport({
   host: "smtp.gmail.com",
   port: 465,
   secure: true, // Use SSL to bypass standard port blocks
+  family: 4, // <-- THIS FORCES IPv4 AND FIXES THE 2-MINUTE TIMEOUT
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
@@ -12,7 +13,7 @@ const transporter = nodemailer.createTransport({
     // This prevents cloud server certificate timeout errors
     rejectUnauthorized: false 
   }
-});
+}as any);
 
 export const sendTicketEmail = async (userEmail: string, eventName: string, ticketId: string, qrCode: string) => {
   const mailOptions = {
