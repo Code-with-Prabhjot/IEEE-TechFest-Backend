@@ -1,11 +1,17 @@
 import nodemailer from 'nodemailer';
 
 const transporter = nodemailer.createTransport({
-  service: 'gmail',
+  host: "smtp.gmail.com",
+  port: 465,
+  secure: true, // Use SSL to bypass standard port blocks
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
   },
+  tls: {
+    // This prevents cloud server certificate timeout errors
+    rejectUnauthorized: false 
+  }
 });
 
 export const sendTicketEmail = async (userEmail: string, eventName: string, ticketId: string, qrCode: string) => {
