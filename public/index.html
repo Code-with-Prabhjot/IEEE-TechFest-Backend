@@ -449,37 +449,38 @@
     payButton.style.cursor = "not-allowed";
 
     try {
-        // 2. The actual API call to your backend
-        const response = await fetch(`/api/tickets/${ticketId}/pay`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem('token')}` // Adjust this if your token is stored differently
-            }
-        });
-
-        const data = await response.json();
-
-        if (response.ok) {
-            // Handle success (e.g., show the QR code or reload the passes)
-            console.log("Payment successful!", data);
-            // Add your success screen logic here
-        } else {
-            // Trigger the catch block if the backend returned an error
-            throw new Error(data.error || "Payment failed"); 
+    payButton.disabled = true; // Disable immediately
+    
+    const response = await fetch(`/api/tickets/${ticketId}/pay`, {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
+    });
 
+    if (response.ok) {
+        // SUCCESS: Redirect or show success modal
+        payButton.innerText = "Payment Successful!";
+        
+        await loadMyTickets();
+        window.location.href = "/my-tickets.html"; // Or wherever your tickets page is
+    } else {
+        // Trigger catch if response is 400/500
+        throw new Error("Payment Failed");
+    }
     } catch (error) {
-        console.error("Payment Error:", error);
-        // 3. ONLY re-enable the button if the payment actually failed
+        // Re-enable only on failure
         payButton.disabled = false;
         payButton.innerText = "TRY AGAIN";
         payButton.style.opacity = "1";
         payButton.style.cursor = "pointer";
+        alert("Payment failed. Please check your connection and try again.");
+
     }
 }
 
         // --- DASHBOARD & TICKET UTILITIES ---
+
         async function loadMyTickets(filterId = null) {
             showPage('page-my-tickets');
             const container = document.getElementById('tickets-container');
