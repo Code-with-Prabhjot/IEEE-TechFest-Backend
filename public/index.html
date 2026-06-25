@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IEEE Tech Fest | Nexus</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background-color: #0b0914;
+            background-image: 
+                radial-gradient(circle at 15% 50%, rgba(138, 43, 226, 0.15), transparent 25%),
+                radial-gradient(circle at 85% 30%, rgba(255, 0, 128, 0.15), transparent 25%);
+            color: #e2e8f0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+        }
+        .glass-panel {
+            background: rgba(20, 15, 35, 0.6);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 0, 128, 0.2);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+        .neon-text-pink { text-shadow: 0 0 10px rgba(255, 0, 128, 0.8), 0 0 20px rgba(255, 0, 128, 0.4); }
+        .neon-text-purple { text-shadow: 0 0 10px rgba(138, 43, 226, 0.8), 0 0 20px rgba(138, 43, 226, 0.4); }
+        
+        .neon-btn {
+            background: linear-gradient(45deg, #ff007a, #8a2be2);
+            box-shadow: 0 0 15px rgba(255, 0, 128, 0.5);
+            transition: all 0.3s ease;
+        }
+        .neon-btn:hover { box-shadow: 0 0 25px rgba(255, 0, 128, 0.8); transform: translateY(-2px); }
+        
+        .input-cyber {
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(138, 43, 226, 0.5);
+            color: white;
+            transition: all 0.3s ease;
+        }
+        .input-cyber:focus { border-color: #ff007a; box-shadow: 0 0 10px rgba(255, 0, 128, 0.3); outline: none; }
+
+        .vip-ticket {
+            background: linear-gradient(135deg, #ff007a, #8a2be2);
+            padding: 3px; border-radius: 1rem;
+            animation: float 3s ease-in-out infinite;
+        }
+        .vip-inner { background: #0b0914; border: 2px dashed #ff007a; }
+        @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-10px); } 100% { transform: translateY(0px); } }
+        
+        /* Scanner Laser Animation */
+        @keyframes scan { 0%, 100% { top: 0; } 50% { top: 100%; } }
+        .laser { animation: scan 2.5s ease-in-out infinite; }
+    </style>
+</head>
+<body class="flex flex-col items-center p-4">
+
+    <nav class="w-full max-w-6xl flex justify-between items-center mb-8 glass-panel p-4 rounded-2xl">
+        <div class="text-2xl font-black tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-purple-500 cursor-pointer neon-text-pink uppercase" onclick="showPage('page-home')">
+            ⚡ IEEE NEXUS
+        </div>
+        <div class="flex space-x-4 items-center">
+            
+            <div id="nav-unauth" class="space-x-4 flex items-center">
+                <button onclick="showPage('page-auth')" class="px-6 py-2 rounded-lg border border-pink-500 text-pink-400 hover:bg-pink-500/20 font-bold transition">Login / Signup</button>
+            </div>
+            
+            <div id="nav-auth" class="space-x-4 hidden flex items-center">
+                <span class="text-sm text-purple-300 mr-2" id="user-greeting"></span>
+                <button onclick="loadMyTickets()" class="px-4 py-2 rounded-lg bg-purple-600/50 hover:bg-purple-600 border border-purple-500 font-bold transition text-sm">🎟️ My Tickets</button>
+                <button onclick="logout()" class="px-4 py-2 rounded-lg border border-slate-600 text-slate-400 hover:text-white transition text-sm">Logout</button>
+            </div>
+
+            <div id="nav-org-auth" class="space-x-4 hidden flex items-center">
+                <span class="text-sm text-green-400 mr-2 font-bold" id="org-greeting"></span>
+                <button onclick="logoutOrg()" class="px-4 py-2 rounded-lg border border-slate-600 text-slate-400 hover:text-white transition text-sm">Logout</button>
+            </div>
+
+            <div id="nav-divider" class="h-6 w-px bg-purple-500/50 mx-2"></div>
+            <button id="nav-organizer-btn" onclick="showPage('page-organizer')" class="text-sm text-slate-400 hover:text-purple-400 transition font-bold">🛡️ Organizer</button>
+        </div>
+    </nav>
+
+    <div id="page-home" class="w-full max-w-6xl flex flex-col items-center animate-fade-in">
+        <h1 class="text-5xl md:text-7xl font-black text-white mb-4 text-center tracking-tight uppercase">Enter the <span class="text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-purple-500 neon-text-pink">Grid</span></h1>
+        <p class="text-lg text-purple-300 mb-12 text-center max-w-2xl">Register for individual events. Solo passes are ₹200. Team passes (up to 4 members) are a flat ₹600 total.</p>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full mb-12">
+            <div class="glass-panel p-6 rounded-2xl cursor-pointer hover:border-pink-500 transition transform hover:-translate-y-2" onclick="openEventDetails('48HR AI Hackathon', true, 600, 3, 'Build next-gen LLM applications. Grand prize pool of ₹50,000. Gather a team of up to 4 members.')">
+                <div class="text-pink-500 text-4xl mb-4">💻</div>
+                <h3 class="text-2xl font-bold text-white mb-2">48HR AI Hackathon</h3>
+                <div class="flex justify-between items-center mb-4">
+                    <span class="text-xs font-mono bg-purple-900/50 text-purple-300 px-2 py-1 rounded border border-purple-700">TEAM EVENT</span>
+                    <span class="font-bold text-pink-400">₹600 / Team</span>
+                </div>
+                <p class="text-slate-400 text-sm">Click to view details and register &rarr;</p>
+            </div>
+
+            <div class="glass-panel p-6 rounded-2xl cursor-pointer hover:border-purple-500 transition transform hover:-translate-y-2" onclick="openEventDetails('CyberSec CTF', false, 200, 0, 'Capture the Flag! Crack servers, find vulnerabilities, and prove your solo hacking skills in this 12-hour sprint.')">
+                <div class="text-purple-500 text-4xl mb-4">🛡️</div>
+                <h3 class="text-2xl font-bold text-white mb-2">CyberSec CTF</h3>
+                <div class="flex justify-between items-center mb-4">
+                    <span class="text-xs font-mono bg-blue-900/50 text-blue-300 px-2 py-1 rounded border border-blue-700">SOLO WARRIOR</span>
+                    <span class="font-bold text-purple-400">₹200 / Person</span>
+                </div>
+                <p class="text-slate-400 text-sm">Click to view details and register &rarr;</p>
+            </div>
+
+            <div class="glass-panel p-6 rounded-2xl cursor-pointer hover:border-pink-500 transition transform hover:-translate-y-2" onclick="openEventDetails('Robo-Wars Clash', true, 600, 3, 'Heavyweight combat robotics tournament in the steel cage. Bring your custom bot and your crew.')">
+                <div class="text-red-500 text-4xl mb-4">🤖</div>
+                <h3 class="text-2xl font-bold text-white mb-2">Robo-Wars Clash</h3>
+                <div class="flex justify-between items-center mb-4">
+                    <span class="text-xs font-mono bg-purple-900/50 text-purple-300 px-2 py-1 rounded border border-purple-700">TEAM EVENT</span>
+                    <span class="font-bold text-pink-400">₹600 / Team</span>
+                </div>
+                <p class="text-slate-400 text-sm">Click to view details and register &rarr;</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="page-event-details" class="hidden w-full max-w-3xl flex-col items-center">
+        <button onclick="showPage('page-home')" class="self-start mb-4 text-purple-400 hover:text-pink-400 font-bold">&larr; Back to Events</button>
+        
+        <div class="glass-panel p-8 rounded-2xl w-full">
+            <h2 id="detail-title" class="text-4xl font-black text-white mb-2 uppercase tracking-wide">Event Title</h2>
+            <div class="flex space-x-4 mb-6">
+                <span id="detail-type" class="text-sm font-mono bg-purple-900/50 text-purple-300 px-3 py-1 rounded border border-purple-700">Type</span>
+                <span id="detail-price" class="text-sm font-mono bg-pink-900/50 text-pink-300 px-3 py-1 rounded border border-pink-700">Price</span>
+            </div>
+            <p id="detail-desc" class="text-lg text-slate-300 mb-8 border-b border-purple-500/30 pb-8">Description goes here.</p>
+
+            <div id="registration-area">
+                <h3 class="text-2xl font-bold text-white mb-4">Secure Your Spot</h3>
+                
+                <div id="event-unauth-msg" class="bg-red-900/20 border border-red-500/50 p-4 rounded-lg mb-6">
+                    <p class="text-red-400">⚠️ You must be logged in to register for events or add teammates.</p>
+                    <button onclick="showPage('page-auth')" class="mt-2 px-4 py-2 bg-red-600 hover:bg-red-500 text-white font-bold rounded">Login / Create Account</button>
+                </div>
+
+                <div id="event-auth-form" class="hidden space-y-6">
+                    <div id="team-inputs" class="space-y-4 hidden">
+                        <p class="text-sm text-pink-400 font-bold">Add Teammate Emails (Must have registered accounts):</p>
+                        <div id="teammate-email-container" class="space-y-3">
+                            </div>
+                    </div>
+                    
+                    <div class="bg-purple-900/20 border border-purple-500/30 p-4 rounded-lg flex justify-between items-center">
+                        <span class="text-lg text-slate-300">Total Flat Fee:</span>
+                        <span id="checkout-price" class="text-3xl font-black text-pink-500">₹0</span>
+                    </div>
+
+                    <button onclick="submitEventRegistration()" class="w-full neon-btn py-4 rounded-xl text-white font-black text-xl tracking-wider">
+                        REGISTER & PROCEED TO PAYMENT
+                    </button>
+                    <p id="reg-status" class="text-center font-bold mt-2"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="page-payment" class="hidden w-full max-w-md flex-col items-center">
+        <div class="glass-panel p-8 rounded-2xl w-full text-center">
+            <h2 class="text-2xl font-black text-white mb-2">Payment Required</h2>
+            <p class="text-sm text-slate-400 mb-6">Pay the flat fee to unlock your QR Ticket.</p>
+            <div class="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-600 mb-8" id="pay-amount">₹0</div>
+            
+            <button onclick="processPayment()" id="pay-btn" class="w-full bg-green-600 hover:bg-green-500 text-white font-black py-4 rounded-xl shadow-[0_0_15px_rgba(22,163,74,0.6)] transition text-xl">
+                PAY VIA UPI
+            </button>
+            <p id="pay-status" class="mt-4 font-bold"></p>
+        </div>
+    </div>
+
+    <div id="page-my-tickets" class="hidden w-full max-w-5xl flex-col items-center">
+        <div class="w-full flex justify-between items-center mb-8">
+            <h2 id="tickets-page-title" class="text-4xl font-black text-white uppercase tracking-wider neon-text-purple">Your Passes</h2>
+            <button onclick="showPage('page-home')" class="neon-btn px-6 py-2 rounded-lg text-white font-bold">Browse Events</button>
+        </div>
+        
+        <div id="tickets-container" class="grid grid-cols-1 md:grid-cols-2 gap-8 w-full place-items-center">
+            </div>
+        <p id="no-tickets-msg" class="text-slate-400 text-lg hidden">You haven't registered for any events yet.</p>
+    </div>
+
+    <div id="page-auth" class="hidden w-full max-w-md flex-col items-center">
+        <div class="glass-panel p-8 rounded-2xl w-full">
+            <div class="flex justify-center space-x-4 mb-6 border-b border-purple-500/30 pb-2">
+                <button onclick="toggleAuth('login')" id="tab-login" class="text-pink-500 font-bold border-b-2 border-pink-500 pb-1">Login</button>
+                <button onclick="toggleAuth('register')" id="tab-register" class="text-slate-400 hover:text-white pb-1">Create Account</button>
+            </div>
+
+            <div id="box-login" class="space-y-4">
+                <input type="email" id="auth-log-email" placeholder="Student Email" class="w-full px-4 py-3 rounded-lg input-cyber" onkeydown="if(event.key === 'Enter') document.getElementById('auth-log-pass').focus()">
+                <div class="relative">
+                    <input type="password" id="auth-log-pass" placeholder="Password" class="w-full px-4 py-3 rounded-lg input-cyber pr-10" onkeydown="if(event.key === 'Enter') handleLogin()">
+                    <button onclick="toggleEye('auth-log-pass')" class="absolute right-3 top-3 text-slate-400 hover:text-white">👁️</button>
+                </div>
+                <button onclick="handleLogin()" class="w-full neon-btn py-3 rounded-lg text-white font-bold">Access Portal</button>
+            </div>
+
+            <div id="box-register" class="space-y-4 hidden">
+                <input type="text" id="auth-reg-name" placeholder="Full Name" class="w-full px-4 py-3 rounded-lg input-cyber" onkeydown="if(event.key === 'Enter') document.getElementById('auth-reg-email').focus()">
+                <input type="email" id="auth-reg-email" placeholder="Student Email" class="w-full px-4 py-3 rounded-lg input-cyber" onkeydown="if(event.key === 'Enter') document.getElementById('auth-reg-pass').focus()">
+                <div class="relative">
+                    <input type="password" id="auth-reg-pass" placeholder="Create Password" class="w-full px-4 py-3 rounded-lg input-cyber pr-10" onkeydown="if(event.key === 'Enter') handleRegister()">
+                    <button onclick="toggleEye('auth-reg-pass')" class="absolute right-3 top-3 text-slate-400 hover:text-white">👁️</button>
+                </div>
+                <button onclick="handleRegister()" class="w-full neon-btn py-3 rounded-lg text-white font-bold">Create Account</button>
+            </div>
+            <p id="auth-status" class="mt-4 text-center font-bold text-sm"></p>
+        </div>
+    </div>
+
+    <div id="page-organizer" class="hidden w-full max-w-md flex-col items-center">
+        <div class="glass-panel p-8 rounded-2xl w-full">
+            <h2 class="text-2xl font-bold text-purple-400 mb-6 text-center">Gate Security Access</h2>
+            
+            <div class="flex justify-center space-x-4 mb-6 border-b border-purple-500/30 pb-2">
+                <button onclick="toggleOrg('login')" id="org-tab-login" class="text-purple-400 font-bold border-b-2 border-purple-400 pb-1">Login</button>
+                <button onclick="toggleOrg('register')" id="org-tab-register" class="text-slate-400 hover:text-white pb-1">New Guard</button>
+            </div>
+
+            <div id="org-login" class="space-y-4">
+                <input type="email" id="org-email" placeholder="Volunteer Email" class="w-full px-4 py-3 rounded-lg input-cyber" onkeydown="if(event.key === 'Enter') document.getElementById('org-pass').focus()">
+                <div class="relative">
+                    <input type="password" id="org-pass" placeholder="Password" class="w-full px-4 py-3 rounded-lg input-cyber pr-10" onkeydown="if(event.key === 'Enter') handleOrgLogin()">
+                    <button onclick="toggleEye('org-pass')" class="absolute right-3 top-3 text-slate-400 hover:text-white">👁️</button>
+                </div>
+                <button onclick="handleOrgLogin()" class="w-full bg-purple-600 hover:bg-purple-500 py-3 rounded-lg text-white font-bold transition">Login to Scanner</button>
+            </div>
+
+            <div id="org-register" class="space-y-4 hidden">
+                <input type="text" id="org-reg-name" placeholder="Guard Name" class="w-full px-4 py-3 rounded-lg input-cyber">
+                <input type="email" id="org-reg-email" placeholder="Volunteer Email" class="w-full px-4 py-3 rounded-lg input-cyber">
+                <div class="relative">
+                    <input type="password" id="org-reg-pass" placeholder="Password" class="w-full px-4 py-3 rounded-lg input-cyber pr-10">
+                    <button onclick="toggleEye('org-reg-pass')" class="absolute right-3 top-3 text-slate-400 hover:text-white">👁️</button>
+                </div>
+                <div class="relative">
+                    <input type="password" id="org-reg-key" placeholder="Master Security Key" class="w-full px-4 py-3 rounded-lg bg-red-900/20 border-red-500/50 focus:border-red-500 text-white outline-none pr-10" onkeydown="if(event.key === 'Enter') handleOrgRegister()">
+                    <button onclick="toggleEye('org-reg-key')" class="absolute right-3 top-3 text-slate-400 hover:text-white">👁️</button>
+                </div>
+                <button onclick="handleOrgRegister()" class="w-full bg-red-600 hover:bg-red-500 py-3 rounded-lg text-white font-bold transition">Authorize Guard</button>
+            </div>
+            <p id="org-status" class="mt-4 text-center font-bold"></p>
+        </div>
+    </div>
+
+    <div id="page-org-dashboard" class="hidden w-full max-w-lg flex-col items-center">
+        <div class="glass-panel p-8 rounded-2xl w-full">
+            <h2 class="text-2xl font-bold text-green-400 mb-6 text-center">Gate Control Terminal</h2>
+            
+            <div class="bg-green-900/30 text-green-400 border border-green-500/50 p-2 rounded text-center font-bold animate-pulse mb-6">🟢 SCANNER ACTIVE</div>
+            
+            <div class="relative w-full h-48 bg-black rounded-lg overflow-hidden border-2 border-purple-500 flex flex-col items-center justify-center mb-6">
+                <span class="text-slate-500 mb-2">📷 Camera Ready</span>
+                <div class="w-full h-0.5 bg-green-500 absolute top-0 shadow-[0_0_10px_#22c55e] laser"></div>
+                <button onclick="document.getElementById('qr-upload').click()" class="bg-purple-600/50 hover:bg-purple-600 text-white text-xs px-3 py-1 rounded border border-purple-400">Upload / Take Photo</button>
+                <input type="file" id="qr-upload" accept="image/*" capture="environment" class="hidden" onchange="fakeScanProcess()">
+            </div>
+
+            <div class="text-center text-slate-400 text-sm mb-6">- OR -</div>
+
+            <input type="text" id="scan-ticket-id" placeholder="Paste Ticket ID Here" class="w-full px-4 py-3 rounded-lg input-cyber font-mono text-center mb-4" onkeydown="if(event.key === 'Enter') handleScan()">
+            <button onclick="handleScan()" class="w-full bg-green-600 hover:bg-green-500 py-4 rounded-lg text-white font-black text-xl transition shadow-[0_0_15px_rgba(22,163,74,0.6)]">SCAN & ADMIT</button>
+            
+            <p id="org-scan-status" class="mt-4 text-center font-bold"></p>
+        </div>
+    </div>
+
+    <script>
+        let studentToken = localStorage.getItem('token') || '';
+        let pendingTicketId = '';
+        let orgToken = '';
+        let activeEvent = { name: '', isTeam: false, price: 0, maxMates: 0 };
+
+        function toggleEye(inputId) {
+            const input = document.getElementById(inputId);
+            input.type = input.type === 'password' ? 'text' : 'password';
+        }
+
+        window.onload = () => {
+            if (studentToken) updateNavState(true);
+            else updateNavState(false);
+        };
+
+        function showPage(pageId) {
+            // Wipe transient error texts on page change
+            document.getElementById('auth-status').innerText = '';
+            document.getElementById('org-status').innerText = '';
+            document.getElementById('reg-status').innerText = '';
+            document.getElementById('org-scan-status').innerText = '';
+
+            ['page-home', 'page-event-details', 'page-payment', 'page-my-tickets', 'page-auth', 'page-organizer', 'page-org-dashboard'].forEach(id => {
+                document.getElementById(id).classList.add('hidden');
+            });
+            document.getElementById(pageId).classList.remove('hidden');
+            document.getElementById(pageId).classList.add('flex');
+        }
+
+        function updateNavState(isLoggedIn) {
+            // Hide Organizer state by default when checking student auth
+            document.getElementById('nav-org-auth').classList.add('hidden');
+
+            if (isLoggedIn) {
+                document.getElementById('nav-unauth').classList.add('hidden');
+                document.getElementById('nav-auth').classList.remove('hidden');
+                document.getElementById('event-unauth-msg')?.classList.add('hidden');
+                document.getElementById('event-auth-form')?.classList.remove('hidden');
+                document.getElementById('nav-organizer-btn').classList.add('hidden');
+                document.getElementById('nav-divider').classList.add('hidden');
+            } else {
+                document.getElementById('nav-auth').classList.add('hidden');
+                document.getElementById('nav-unauth').classList.remove('hidden');
+                document.getElementById('event-auth-form')?.classList.add('hidden');
+                document.getElementById('event-unauth-msg')?.classList.remove('hidden');
+                document.getElementById('nav-organizer-btn').classList.remove('hidden');
+                document.getElementById('nav-divider').classList.remove('hidden');
+            }
+        }
+
+        // --- AUTHENTICATION ---
+        function toggleAuth(mode) {
+            document.getElementById('auth-status').innerText = ''; 
+            document.getElementById('box-login').classList.add('hidden');
+            document.getElementById('box-register').classList.add('hidden');
+            document.getElementById('tab-login').className = "text-slate-400 hover:text-white pb-1";
+            document.getElementById('tab-register').className = "text-slate-400 hover:text-white pb-1";
+
+            if (mode === 'login') {
+                document.getElementById('box-login').classList.remove('hidden');
+                document.getElementById('tab-login').className = "text-pink-500 font-bold border-b-2 border-pink-500 pb-1";
+            } else {
+                document.getElementById('box-register').classList.remove('hidden');
+                document.getElementById('tab-register').className = "text-pink-500 font-bold border-b-2 border-pink-500 pb-1";
+            }
+        }
+
+        async function handleRegister() {
+            const name = document.getElementById('auth-reg-name').value;
+            const email = document.getElementById('auth-reg-email').value;
+            const password = document.getElementById('auth-reg-pass').value;
+            const status = document.getElementById('auth-status');
+
+            try {
+                const res = await fetch('/api/auth/register', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, email, password, role: 'STUDENT' })
+                });
+                if(!res.ok) throw new Error("Registration failed. Email exists.");
+                
+                showStatus(status, "✅ Account created! Please Login.", "green-400");
+                document.getElementById('auth-reg-pass').value = '';
+                setTimeout(() => { toggleAuth('login'); }, 1500);
+            } catch(e) { showStatus(status, `❌ ${e.message}`, "red-400"); }
+        }
+
+        async function handleLogin() {
+            const email = document.getElementById('auth-log-email').value;
+            const password = document.getElementById('auth-log-pass').value;
+            const status = document.getElementById('auth-status');
+
+            try {
+                const res = await fetch('/api/auth/login', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                const data = await res.json();
+                if(!res.ok) throw new Error("Invalid credentials");
+                
+                studentToken = data.token;
+                localStorage.setItem('token', studentToken);
+                updateNavState(true);
+                document.getElementById('user-greeting').innerText = `Welcome, ${email.split('@')[0]}`;
+                showPage('page-home');
+                status.innerText = ''; 
+            } catch(e) { showStatus(status, `❌ ${e.message}`, "red-400"); }
+        }
+
+        function logout() {
+            studentToken = '';
+            localStorage.removeItem('token');
+            updateNavState(false);
+            document.getElementById('auth-status').innerText = ''; 
+            showPage('page-home');
+        }
+
+        // --- EVENT REGISTRATION FLOW ---
+        function openEventDetails(name, isTeam, price, maxMates, desc) {
+            activeEvent = { name, isTeam, price, maxMates };
+            document.getElementById('detail-title').innerText = name;
+            document.getElementById('detail-type').innerText = isTeam ? "TEAM EVENT" : "SOLO WARRIOR";
+            document.getElementById('detail-price').innerText = `₹${price} Flat Fee`;
+            document.getElementById('detail-desc').innerText = desc;
+            document.getElementById('checkout-price').innerText = `₹${price}`;
+            document.getElementById('reg-status').innerText = '';
+
+            const teamContainer = document.getElementById('team-inputs');
+            const emailBox = document.getElementById('teammate-email-container');
+            emailBox.innerHTML = '';
+
+            if (isTeam) {
+                teamContainer.classList.remove('hidden');
+                for(let i=0; i<maxMates; i++) {
+                    emailBox.innerHTML += `<input type="email" id="mate-${i}" placeholder="Teammate ${i+1} Email (Optional)" class="w-full px-4 py-2 rounded-lg input-cyber text-sm">`;
+                }
+            } else { teamContainer.classList.add('hidden'); }
+            showPage('page-event-details');
+        }
+
+        async function submitEventRegistration() {
+            const status = document.getElementById('reg-status');
+            showStatus(status, "Validating registration & teammates...", "purple-400");
+
+            let teammateEmails = [];
+            if (activeEvent.isTeam) {
+                for(let i=0; i<activeEvent.maxMates; i++) {
+                    const email = document.getElementById(`mate-${i}`).value;
+                    if(email) teammateEmails.push(email);
+                }
+            }
+
+            try {
+                const res = await fetch('/api/events/register-fest', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${studentToken}` },
+                    body: JSON.stringify({ eventName: activeEvent.name, isTeam: activeEvent.isTeam, teammateEmails })
+                });
+                const data = await res.json();
+                if(!res.ok) throw new Error(data.error);
+
+                pendingTicketId = data.ticketId;
+                
+                document.getElementById('pay-btn').innerHTML = 'PAY VIA UPI';
+                document.getElementById('pay-btn').classList.replace('bg-slate-600', 'bg-green-600');
+                document.getElementById('pay-status').innerText = ''; 
+                document.getElementById('pay-amount').innerText = `₹${data.totalAmount}`;
+                
+                showPage('page-payment');
+            } catch(e) { showStatus(status, `❌ ${e.message}`, "red-500"); }
+        }
+
+        async function processPayment() {
+            const btn = document.getElementById('pay-btn');
+            const status = document.getElementById('pay-status');
+            btn.innerHTML = 'Processing UPI...';
+            btn.classList.replace('bg-green-600', 'bg-slate-600');
+
+            try {
+                await new Promise(r => setTimeout(r, 1500)); 
+                const res = await fetch(`/api/events/payment/${pendingTicketId}`, {
+                    method: 'POST', headers: { 'Authorization': `Bearer ${studentToken}` }
+                });
+                if(!res.ok) throw new Error("Payment failed");
+                
+                loadMyTickets(pendingTicketId); 
+            } catch(e) {
+                showStatus(status, "❌ Payment Failed", "red-500");
+                btn.innerHTML = 'TRY AGAIN';
+                btn.classList.replace('bg-slate-600', 'bg-green-600');
+            }
+        }
+
+        // --- DASHBOARD & TICKET UTILITIES ---
+        async function loadMyTickets(filterId = null) {
+            showPage('page-my-tickets');
+            const container = document.getElementById('tickets-container');
+            const noMsg = document.getElementById('no-tickets-msg');
+            const pageTitle = document.getElementById('tickets-page-title');
+            
+            pageTitle.innerText = filterId ? "🎉 Registration Complete!" : "Your Passes";
+            container.innerHTML = '<p class="text-purple-400">Loading tickets...</p>';
+
+            try {
+                const res = await fetch('/api/events/my-ticket', {
+                    headers: { 'Authorization': `Bearer ${studentToken}` }
+                });
+                const data = await res.json();
+                
+                if(!res.ok || !data.tickets || data.tickets.length === 0) {
+                    container.innerHTML = '';
+                    noMsg.classList.remove('hidden');
+                    return;
+                }
+
+                noMsg.classList.add('hidden');
+                container.innerHTML = '';
+
+                const ticketsToDisplay = filterId 
+                    ? data.tickets.filter(t => t.id === filterId && t.paymentStatus === 'COMPLETED')
+                    : data.tickets.filter(t => t.paymentStatus === 'COMPLETED');
+
+                ticketsToDisplay.forEach(t => {
+                    let matesHtml = '';
+                    if(t.teamMembers && t.teamMembers.length > 0) {
+                        matesHtml = `<div class="mt-2 text-xs text-pink-300"><b>Teammates:</b> ${t.teamMembers.map(m => m.user.email).join(', ')}</div>`;
+                    }
+                    const qrSrc = t.qrCode ? t.qrCode : `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${t.id}`;
+
+                    container.innerHTML += `
+                        <div class="vip-ticket w-full max-w-sm">
+                            <div class="vip-inner rounded-[0.8rem] p-6 flex flex-col items-center">
+                                <h3 class="text-2xl font-black neon-text-pink uppercase text-white mb-1 text-center">${t.eventName}</h3>
+                                <p class="text-xs font-mono text-purple-300 mb-4 bg-purple-900/50 px-2 rounded border border-purple-600">${t.isTeam ? 'TEAM PASS' : 'SOLO PASS'}</p>
+                                <div class="bg-white p-2 rounded-xl w-48 h-48 mb-4">
+                                    <img src="${qrSrc}" class="w-full h-full object-contain">
+                                </div>
+                                <div class="w-full border-t border-dashed border-pink-500/50 my-2"></div>
+                                ${matesHtml}
+                                <div class="w-full flex flex-col gap-2 mt-4">
+                                    <p class="text-[10px] text-slate-400 font-mono break-all text-center">ID: ${t.id}</p>
+                                    <div class="flex gap-2 w-full mt-2">
+                                        <button onclick="downloadQR('${qrSrc}', '${t.eventName.replace(/\s+/g, '_')}')" class="flex-1 bg-pink-600/30 hover:bg-pink-600 border border-pink-500 text-white text-xs py-2 rounded transition">💾 Save QR</button>
+                                        <button onclick="copyId('${t.id}')" class="flex-1 bg-purple-600/30 hover:bg-purple-600 border border-purple-500 text-white text-xs py-2 rounded transition">📋 Copy ID</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+            } catch(e) { container.innerHTML = `<p class="text-red-500">Error loading tickets: ${e.message}</p>`; }
+        }
+
+        function downloadQR(url, name) {
+            fetch(url).then(res => res.blob()).then(blob => {
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = `${name}_Ticket_QR.png`;
+                a.click();
+            }).catch(() => alert("Failed to download image. Try right-clicking and saving."));
+        }
+
+        function copyId(id) {
+            navigator.clipboard.writeText(id).then(() => {
+                alert('Ticket ID copied to clipboard!');
+            });
+        }
+
+        // --- ORGANIZER PORTAL ---
+        function toggleOrg(mode) {
+            document.getElementById('org-status').innerText = ''; 
+            document.getElementById('org-login').classList.add('hidden');
+            document.getElementById('org-register').classList.add('hidden');
+            document.getElementById('org-tab-login').className = "text-slate-400 hover:text-white pb-1";
+            document.getElementById('org-tab-register').className = "text-slate-400 hover:text-white pb-1";
+
+            if (mode === 'login') {
+                document.getElementById('org-login').classList.remove('hidden');
+                document.getElementById('org-tab-login').className = "text-purple-400 font-bold border-b-2 border-purple-400 pb-1";
+            } else {
+                document.getElementById('org-register').classList.remove('hidden');
+                document.getElementById('org-tab-register').className = "text-purple-400 font-bold border-b-2 border-purple-400 pb-1";
+            }
+        }
+
+        async function handleOrgRegister() {
+            const name = document.getElementById('org-reg-name').value;
+            const email = document.getElementById('org-reg-email').value;
+            const password = document.getElementById('org-reg-pass').value;
+            const secretKey = document.getElementById('org-reg-key').value;
+            const status = document.getElementById('org-status');
+
+            try {
+                const res = await fetch('/api/auth/register', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, email, password, role: 'VOLUNTEER', secretKey })
+                });
+                const data = await res.json();
+                if(!res.ok) throw new Error(data.error || "Registration blocked.");
+                showStatus(status, "✅ Guard Authorized! Please Login.", "green-400");
+                setTimeout(() => { toggleOrg('login'); status.innerText = ''; }, 1500);
+            } catch(e) { showStatus(status, `❌ ${e.message}`, "red-500"); }
+        }
+
+        async function handleOrgLogin() {
+            const email = document.getElementById('org-email').value;
+            const password = document.getElementById('org-pass').value;
+            const status = document.getElementById('org-status');
+            try {
+                const res = await fetch('/api/auth/login', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password })
+                });
+                const data = await res.json();
+                if(!res.ok) throw new Error("Invalid Auth");
+                orgToken = data.token;
+                
+                // Update Nav for Organizer
+                document.getElementById('nav-unauth').classList.add('hidden');
+                document.getElementById('nav-organizer-btn').classList.add('hidden');
+                document.getElementById('nav-divider').classList.add('hidden');
+                document.getElementById('nav-org-auth').classList.remove('hidden');
+                document.getElementById('org-greeting').innerText = `Welcome, ${email.split('@')[0]}`;
+
+                showPage('page-org-dashboard');
+                
+                // Clear inputs
+                document.getElementById('org-email').value = '';
+                document.getElementById('org-pass').value = '';
+            } catch(e) { showStatus(status, `❌ ${e.message}`, "red-500"); }
+        }
+
+        function logoutOrg() {
+            orgToken = '';
+            document.getElementById('nav-org-auth').classList.add('hidden');
+            document.getElementById('nav-unauth').classList.remove('hidden');
+            document.getElementById('nav-organizer-btn').classList.remove('hidden');
+            document.getElementById('nav-divider').classList.remove('hidden');
+            document.getElementById('org-scan-status').innerText = '';
+            showPage('page-home');
+        }
+
+        function fakeScanProcess() {
+            const status = document.getElementById('org-scan-status');
+            showStatus(status, "Scanning image...", "purple-400");
+            setTimeout(() => {
+                showStatus(status, "❌ QR code unreadable. Enter ID manually below.", "red-500");
+            }, 1500);
+        }
+
+        async function handleScan() {
+            const id = document.getElementById('scan-ticket-id').value;
+            const status = document.getElementById('org-scan-status');
+            if(!id) return showStatus(status, "⚠️ Enter a Ticket ID", "red-500");
+            
+            try {
+                const res = await fetch(`/api/events/admin/checkin/${id}`, {
+                    method: 'POST', headers: { 'Authorization': `Bearer ${orgToken}` }
+                });
+                const data = await res.json();
+                if(!res.ok) throw new Error(data.error);
+                showStatus(status, "✅ ACCESS GRANTED. Valid Ticket.", "green-400");
+                document.getElementById('scan-ticket-id').value = '';
+            } catch(e) { showStatus(status, `❌ ALARM: ${e.message}`, "red-500"); }
+        }
+
+        function showStatus(el, msg, colorClass) {
+            el.innerText = msg;
+            el.className = `mt-4 text-center font-bold text-${colorClass}`;
+        }
+    </script>
+</body>
+</html>
