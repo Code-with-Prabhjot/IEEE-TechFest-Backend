@@ -82,7 +82,6 @@
 
     <div id="page-home" class="w-full max-w-6xl flex flex-col items-center animate-fade-in">
         <h1 class="text-5xl md:text-7xl font-black text-white mb-4 text-center tracking-tight uppercase">Enter the <span class="text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-purple-500 neon-text-pink">Grid</span></h1>
-        <p class="text-lg text-purple-300 mb-12 text-center max-w-2xl">Register for individual events. Solo passes are ₹200. Team passes (up to 4 members) are a flat ₹600 total.</p>
         
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full mb-12">
             <div class="glass-panel p-6 rounded-2xl cursor-pointer hover:border-pink-500 transition transform hover:-translate-y-2" onclick="openEventDetails('48HR AI Hackathon', true, 600, 3, 'Build next-gen LLM applications. Grand prize pool of ₹50,000. Gather a team of up to 4 members.')">
@@ -371,7 +370,7 @@
                 studentToken = data.token;
                 localStorage.setItem('token', studentToken);
                 updateNavState(true);
-                document.getElementById('user-greeting').innerText = `Welcome, ${email.split('@')[0]}`;
+                document.getElementById('user-greeting').innerText = 'Welcome, ${data.user.name}';
                 showPage('page-home');
                 status.innerText = ''; 
             } catch(e) { showStatus(status, `❌ ${e.message}`, "red-400"); }
@@ -469,7 +468,7 @@
 
                 if (response.ok) {
                     payButton.innerText = "Payment Successful!";
-                    await loadMyTickets();
+                    await loadMyTickets(ticketId);
                 } else {
                     throw new Error("Payment Failed");
                 }

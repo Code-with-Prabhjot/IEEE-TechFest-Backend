@@ -2,7 +2,6 @@
 import { Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import QRCode from 'qrcode';
-import { sendTicketEmail } from '../services/emailService';
 
 const prisma = new PrismaClient();
 
@@ -154,14 +153,6 @@ export const simulatePayment = async (req: Request, res: Response): Promise<void
       where: { id: ticketId },
       data: { paymentStatus: 'COMPLETED' },
     });
-
-    // Replace your current email trigger with this:
-  try {
-    await sendTicketEmail(ticket.user.email, ticket.eventName, ticket.id, ticket.qrCode || '');
-  } catch (mailError) {
-    console.error("Ticket generated, but email failed to send:", mailError);
-    // We don't return an error to the user here, we just log it and let them proceed!
-  }
 
     res.status(200).json({ message: 'Payment successful!', ticket: paidTicket });
   } catch (error) {
