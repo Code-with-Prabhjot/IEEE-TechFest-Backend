@@ -451,18 +451,16 @@
     try {
     payButton.disabled = true; // Disable immediately
     
-    const response = await fetch(`/api/tickets/${ticketId}/pay`, {
+    const response = await fetch(`https://nexus-backend-acmg.onrender.com/api/tickets/${ticketId}/pay`, {
         method: 'POST',
         headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
+            'Authorization': `Bearer ${studentToken}`
         }
     });
 
     if (response.ok) {
         // SUCCESS: Redirect or show success modal
         payButton.innerText = "Payment Successful!";
-        
-        await loadMyTickets();
         window.location.href = "/my-tickets.html"; // Or wherever your tickets page is
     } else {
         // Trigger catch if response is 400/500
