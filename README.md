@@ -23,7 +23,7 @@ If you prefer to test the backend locally rather than using the live link, follo
 
 1. **Clone the repository:**
    \`\`\`bash
-   git clone [Insert Your Repo URL]
+   git clone **https://github.com/Code-with-Prabhjot/IEEE-TechFest-Backend.git**
    \`\`\`
 2. **Install all dependencies:**
    \`\`\`bash
