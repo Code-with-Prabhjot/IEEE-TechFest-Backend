@@ -1,75 +1,87 @@
-# IEEE Tech Fest Backend API
+# IEEE Tech Fest Central Backend & Registration System ⚡
 
-This is the central backend REST API powering the IEEE Tech Fest registration, payment, and gate check-in system. Built with Node.js, Express, TypeScript, and SQLite, it is designed to be lightweight, secure, and capable of handling severe traffic spikes on low-memory hardware.
+This repository contains the central backend API and an integrated full-stack Single Page Application (SPA) powering the IEEE Tech Fest event. It handles everything from student sign-ups and simulated payment validations to secure QR-code gate check-ins.
 
-## 🚀 Features & Innovations Added
-* **Real QR Code Generation:** Dynamically generates a base64 Data URL QR Code upon registration.
-* **Strict Role-Based Access Control:** Secure JWT middleware segregates Students and Volunteers.
-* **Zod Input Validation:** Bulletproofs the database against malformed payloads.
-* **Comprehensive Edge Case Handling:** Prevents duplicate registrations, double check-ins, and unauthorized payments.
+> **🌐 Live Production Deployment:** > You can test the fully functional live application here: **https://nexus-backend-acmg.onrender.com**
 
 ---
 
-## 🛠️ How to Run Locally
+## 🚀 Innovations & Edge Cases Handled
 
-**1. Clone the repository and install dependencies:**
-\`\`\`bash
-npm install
-\`\`\`
+While the core requirement was an API-only architecture, I opted to build and deploy a fully functional SPA frontend alongside it. This demonstrates end-to-end viability, real-world JWT handling on the client side, and instant UI state management without page reloads.
 
-**2. Configure the Environment:**
-Create a `.env` file in the root directory and add a secret key for JWT signing:
-\`\`\`env
-JWT_SECRET="super-secret-techfest-key-123!"
-\`\`\`
-
-**3. Initialize the SQLite Database:**
-\`\`\`bash
-npx prisma db push
-\`\`\`
-
-**4. Start the Development Server:**
-\`\`\`bash
-npm run dev
-\`\`\`
-*The server will start on `http://localhost:3000`*
+* **Strict Role-Based Access Control:** Secure JWT middleware segregates `Student` and `Volunteer` capabilities.
+* **Real QR Code Generation:** Dynamically generates a base64 Data URL QR Code upon successful registration and payment.
+* **Double Check-In Protection:** The scanning endpoint instantly rejects previously scanned QR codes to prevent ticket sharing.
+* **No-SQL-Injection Validation:** All inputs are strictly sanitized before hitting the database.
 
 ---
 
-## 👮 How to Create a Volunteer Account
+## 💻 How to Run Locally
 
-To test gate check-in features, you must operate as a Volunteer. 
-Send a `POST` request to `/api/auth/register` with the following JSON body:
+If you prefer to test the backend locally rather than using the live link, follow these exact commands:
+
+1. **Clone the repository:**
+   \`\`\`bash
+   git clone [Insert Your Repo URL]
+   \`\`\`
+2. **Install all dependencies:**
+   \`\`\`bash
+   npm install
+   \`\`\`
+3. **Configure Environment Variables:**
+   Create a `.env` file in the root directory and add the following:
+   \`\`\`env
+   PORT=10000
+   DATABASE_URL=your_postgresql_connection_string
+   JWT_SECRET=super_secret_jwt_key
+   VOLUNTEER_MASTER_KEY=ieee_admin_override_2026
+   \`\`\`
+4. **Push the database schema:**
+   \`\`\`bash
+   npx prisma db push
+   \`\`\`
+5. **Start the server:**
+   \`\`\`bash
+   npm run dev
+   \`\`\`
+
+---
+
+## 👮 How to Create a Volunteer Account (Gate Security)
+
+To test gate check-in features, you must operate as a Volunteer. To prevent regular students from registering as volunteers, the API requires a master key.
+
+Send a `POST` request to `/api/auth/register` with this JSON body:
+
 \`\`\`json
 {
   "name": "Gate Guard",
   "email": "guard@techfest.com",
   "password": "securepassword123",
-  "role": "VOLUNTEER"
+  "role": "VOLUNTEER",
+  "adminKey": "ieee_admin_override_2026"
 }
 \`\`\`
-Log in using these credentials at `/api/auth/login` to receive your Volunteer JWT token. Pass this token in the `Authorization: Bearer <token>` header for protected admin endpoints.
+
+Once registered, log in at `/api/auth/login` to receive your Volunteer JWT token. Pass this token in the `Authorization: Bearer <token>` header to access protected admin routes.
 
 ---
 
 ## 📌 API Documentation
 
-### Authentication
-* **POST** `/api/auth/register` - Register a new account (Student or Volunteer).
-* **POST** `/api/auth/login` - Authenticate and receive a JWT token.
+The complete documentation of all endpoints, including paths, HTTP methods, request parameters, and response formats, is available in the attached Postman Collection. 
 
-### Student Endpoints (Requires Auth)
-* **POST** `/api/events/register-fest` - Register for the fest and generate a QR Code ticket.
-* **GET** `/api/events/my-ticket` - View your generated ticket and payment status.
-* **POST** `/api/events/payment/:ticketId` - Simulate a successful ticket payment.
+* **Auth:** `POST /api/auth/register`, `POST /api/auth/login`
+* **Student:** `POST /api/events/register-fest`, `GET /api/events/my-ticket`, `POST /api/events/payment/:ticketId`
+* **Volunteer:** `GET /api/events/admin/all-tickets`, `POST /api/events/admin/checkin/:ticketId`
 
-### Volunteer Endpoints (Requires Volunteer Auth)
-* **GET** `/api/events/admin/all-tickets` - View all database registrations.
-* **POST** `/api/events/admin/checkin/:ticketId` - Scan a ticket to grant gate entry.
+**Postman Collection URL:** **[Insert Your Public Postman Link Here]**
 
 ---
 
-## 🤔 Assumptions Made
-1. **Database constraints:** Assuming a 1 GB RAM limit, SQLite was chosen as the optimal database to minimize background memory consumption.
-2. **Payments:** As no payment gateway API keys were provided, the payment process is simulated via a secured REST endpoint that verifies ticket ownership.
-3. **Hardware & Traffic:** Assumed the 2,000 req/min spike requires asynchronous write queues to prevent SQLite database locks (Detailed in `SCALE.md`).
+## 🤔 Engineering Assumptions
+
+1. **Database Architecture:** PostgreSQL was selected over SQLite to handle high concurrent read/writes and prevent database locking during peak registration spikes.
+2. **Payments:** As live payment gateway credentials were not provided, the transaction flow is simulated via a secured REST endpoint that strictly validates JWT ownership before marking the ticket as `COMPLETED` and generating the gate pass.
+3. **Traffic Load:** The system architecture assumes a peak load of 2,000 requests per minute. Read the included `SCALE.md` file for my specific strategy on keeping the server stable during this 60-second spike.

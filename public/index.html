@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>IEEE Tech Fest | Nexus</title>
@@ -254,7 +255,7 @@
                 <span class="text-slate-500 mb-2">📷 Camera Ready</span>
                 <div class="w-full h-0.5 bg-green-500 absolute top-0 shadow-[0_0_10px_#22c55e] laser"></div>
                 <button onclick="document.getElementById('qr-upload').click()" class="bg-purple-600/50 hover:bg-purple-600 text-white text-xs px-3 py-1 rounded border border-purple-400">Upload / Take Photo</button>
-                <input type="file" id="qr-upload" accept="image/*" capture="environment" class="hidden" onchange="fakeScanProcess()">
+                <button onclick="startRealScanner()" class="w-full bg-purple-600 hover:bg-purple-500 text-white font-bold py-3 rounded-lg transition-all duration-300 neon-border">Start Camera Scanner</button>
             </div>
 
             <div class="text-center text-slate-400 text-sm mb-6">- OR -</div>
@@ -370,7 +371,7 @@
                 studentToken = data.token;
                 localStorage.setItem('token', studentToken);
                 updateNavState(true);
-                document.getElementById('user-greeting').innerText = 'Welcome, ${data.user.name}';
+                document.getElementById('user-greeting').innerText = `Welcome, ${data.user.name}`;
                 showPage('page-home');
                 status.innerText = ''; 
             } catch(e) { showStatus(status, `❌ ${e.message}`, "red-400"); }
@@ -631,12 +632,52 @@
             showPage('page-home');
         }
 
-        function fakeScanProcess() {
+        // --- REAL SCANNER LOGIC ---
+        let html5QrcodeScanner;
+
+        function startRealScanner() {
             const status = document.getElementById('org-scan-status');
-            showStatus(status, "Scanning image...", "purple-400");
-            setTimeout(() => {
-                showStatus(status, "❌ QR code unreadable. Enter ID manually below.", "red-500");
-            }, 1500);
+            showStatus(status, "Warming up camera...", "purple-400");
+
+            // Prevent multiple scanner instances
+            if (html5QrcodeScanner) {
+                html5QrcodeScanner.clear();
+            }
+
+            // Initialize the camera feed inside the 'reader' div
+            html5QrcodeScanner = new Html5QrcodeScanner(
+                "reader",
+                { fps: 10, qrbox: { width: 250, height: 250 } },
+                false
+            );
+
+            html5QrcodeScanner.render(onScanSuccess, onScanError);
+        }
+
+        async function onScanSuccess(decodedText, decodedResult) {
+            // 1. Turn off the camera immediately upon finding a code
+            html5QrcodeScanner.clear();
+            
+            let cleanId = decodedText;
+            
+            // 2. Extract the ID if the QR code encoded a JSON object instead of raw text
+            try {
+                const parsed = JSON.parse(decodedText);
+                if (parsed.id) cleanId = parsed.id;
+            } catch (e) {
+                // It is already a raw string, proceed
+            }
+
+            // 3. Drop the clean ID into your existing input box
+            document.getElementById('scan-ticket-id').value = cleanId;
+            
+            // 4. Automatically fire your existing verification API call
+            await handleScan();
+        }
+
+        function onScanError(errorMessage) {
+            // The scanner continuously fires errors while searching for a code. 
+            // Keep this empty so it doesn't spam your console.
         }
 
         async function handleScan() {
