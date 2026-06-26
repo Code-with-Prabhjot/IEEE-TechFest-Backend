@@ -76,7 +76,7 @@ The complete documentation of all endpoints, including paths, HTTP methods, requ
 * **Student:** `POST /api/events/register-fest`, `GET /api/events/my-ticket`, `POST /api/events/payment/:ticketId`
 * **Volunteer:** `GET /api/events/admin/all-tickets`, `POST /api/events/admin/checkin/:ticketId`
 
-**Postman Collection URL:** **[Insert Your Public Postman Link Here]**
+**Postman Collection: I have included the EEE_Tech_Fest_Collection.json file directly in this repository. Simply open Postman, click "Import", and drag and drop this file to instantly test all API routes.**
 
 ---
 
