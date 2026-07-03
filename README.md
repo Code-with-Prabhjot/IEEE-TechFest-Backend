@@ -1,12 +1,12 @@
-# IEEE Tech Fest Central Backend & Registration System ⚡
+# IEEE Tech Fest Central Backend & Registration System 
 
 This repository contains the central backend API and an integrated full-stack Single Page Application (SPA) powering the IEEE Tech Fest event. It handles everything from student sign-ups and simulated payment validations to secure QR-code gate check-ins.
 
-> **🌐 Live Production Deployment:** > You can test the fully functional live application here: **https://nexus-backend-acmg.onrender.com**
+**Live Production Deployment:**  You can test the fully functional live application here: **https://nexus-backend-acmg.onrender.com**
 
 ---
 
-## 🚀 Innovations & Edge Cases Handled
+##  Innovations & Edge Cases Handled
 
 While the core requirement was an API-only architecture, I opted to build and deploy a fully functional SPA frontend alongside it. This demonstrates end-to-end viability, real-world JWT handling on the client side, and instant UI state management without page reloads.
 
@@ -17,7 +17,7 @@ While the core requirement was an API-only architecture, I opted to build and de
 
 ---
 
-## 💻 How to Run Locally
+##  How to Run Locally
 
 If you prefer to test the backend locally rather than using the live link, follow these exact commands:
 
@@ -48,7 +48,7 @@ If you prefer to test the backend locally rather than using the live link, follo
 
 ---
 
-## 👮 How to Create a Volunteer Account (Gate Security)
+##  How to Create a Volunteer Account (Gate Security)
 
 To test gate check-in features, you must operate as a Volunteer. To prevent regular students from registering as volunteers, the API requires a master key.
 
@@ -68,7 +68,7 @@ Once registered, log in at `/api/auth/login` to receive your Volunteer JWT token
 
 ---
 
-## 📌 API Documentation
+##  API Documentation
 
 The complete documentation of all endpoints, including paths, HTTP methods, request parameters, and response formats, is available in the attached Postman Collection. 
 
@@ -80,7 +80,7 @@ The complete documentation of all endpoints, including paths, HTTP methods, requ
 
 ---
 
-## 🤔 Engineering Assumptions
+##  Engineering Assumptions
 
 1. **Database Architecture:** PostgreSQL was selected over SQLite to handle high concurrent read/writes and prevent database locking during peak registration spikes.
 2. **Payments:** As live payment gateway credentials were not provided, the transaction flow is simulated via a secured REST endpoint that strictly validates JWT ownership before marking the ticket as `COMPLETED` and generating the gate pass.
