@@ -267,6 +267,9 @@
     </div>
 
     <script>
+        // API Base URL - dynamically defaults to current host (e.g. http://localhost:3000) or relative path
+        const API_BASE = (window.location.origin && window.location.origin !== 'null' && window.location.protocol.startsWith('http')) ? window.location.origin : '';
+
         let currentTicketIdToPay = null;
         let studentToken = localStorage.getItem('token') || '';
         let pendingTicketId = '';
@@ -284,6 +287,7 @@
         };
 
         function showPage(pageId) {
+            if (typeof stopScanner === 'function' && pageId !== 'page-org-dashboard') stopScanner();
             // Wipe transient error texts on page change
             document.getElementById('auth-status').innerText = '';
             document.getElementById('org-status').innerText = '';
@@ -458,7 +462,7 @@
 
             try {
                 // 3. Using your full Render URL and the correct studentToken variable!
-                const response = await fetch(`https://nexus-backend-acmg.onrender.com/api/events/payment/${ticketId}`, {
+                const response = await fetch(`${API_BASE}/api/events/payment/${ticketId}`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -622,6 +626,7 @@
         }
 
         function logoutOrg() {
+            if (typeof stopScanner === 'function') stopScanner();
             orgToken = '';
             document.getElementById('nav-org-auth').classList.add('hidden');
             document.getElementById('nav-unauth').classList.remove('hidden');
@@ -632,45 +637,64 @@
         }
 
         // --- REAL SCANNER LOGIC ---
-        let html5QrcodeScanner;
+        let html5QrcodeScanner = null;
 
-        function startRealScanner() {
+        async function stopScanner() {
+            if (html5QrcodeScanner) {
+                try {
+                    await html5QrcodeScanner.clear();
+                } catch (e) {
+                    console.warn("Scanner clear error:", e);
+                }
+                html5QrcodeScanner = null;
+            }
+        }
+
+        async function startRealScanner() {
             const status = document.getElementById('org-scan-status');
             showStatus(status, "Warming up camera...", "purple-400");
 
-            // Prevent multiple scanner instances
-            if (html5QrcodeScanner) {
-                html5QrcodeScanner.clear();
+            if (typeof Html5QrcodeScanner === 'undefined') {
+                showStatus(status, "❌ Camera library (html5-qrcode) not loaded. Please verify internet access or reload.", "red-500");
+                return;
             }
 
-            // Initialize the camera feed inside the 'reader' div
-            html5QrcodeScanner = new Html5QrcodeScanner(
-                "reader",
-                { fps: 10, qrbox: { width: 250, height: 250 } },
-                false
-            );
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                showStatus(status, "❌ Camera access requires HTTPS or localhost, or is not supported by this browser.", "red-500");
+                return;
+            }
 
-            html5QrcodeScanner.render(onScanSuccess, onScanError);
+            try {
+                await stopScanner();
+
+                html5QrcodeScanner = new Html5QrcodeScanner(
+                    "reader",
+                    { fps: 10, qrbox: { width: 250, height: 250 } },
+                    false
+                );
+
+                html5QrcodeScanner.render(onScanSuccess, onScanError);
+                showStatus(status, "📷 Point camera at student QR code.", "green-400");
+            } catch (err) {
+                console.error("Scanner initialization failed:", err);
+                showStatus(status, `❌ Camera error: ${err.message || 'Permission denied'}`, "red-500");
+            }
         }
 
         async function onScanSuccess(decodedText, decodedResult) {
-            // 1. Turn off the camera immediately upon finding a code
-            html5QrcodeScanner.clear();
+            // Turn off camera upon successful scan
+            await stopScanner();
             
-            let cleanId = decodedText;
+            let cleanId = decodedText ? decodedText.trim() : '';
             
-            // 2. Extract the ID if the QR code encoded a JSON object instead of raw text
             try {
                 const parsed = JSON.parse(decodedText);
-                if (parsed.id) cleanId = parsed.id;
+                if (parsed.id) cleanId = parsed.id.trim();
             } catch (e) {
-                // It is already a raw string, proceed
+                // Raw string, proceed
             }
 
-            // 3. Drop the clean ID into your existing input box
             document.getElementById('scan-ticket-id').value = cleanId;
-            
-            // 4. Automatically fire your existing verification API call
             await handleScan();
         }
 

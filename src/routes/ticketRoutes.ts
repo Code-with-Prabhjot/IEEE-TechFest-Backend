@@ -15,11 +15,16 @@ const router = Router();
 // --- STUDENT ROUTES ---
 router.post('/register-fest', authenticateJWT, registerForEvent);
 router.get('/my-ticket', authenticateJWT, getMyTicket);
+router.get('/tickets', authenticateJWT, getMyTicket);
 router.post('/payment/:ticketId', authenticateJWT, simulatePayment);
+router.post('/payment', authenticateJWT, simulatePayment);
 
 // --- VOLUNTEER ROUTES ---
 router.get('/admin/all-tickets', authenticateJWT, requireRole(['VOLUNTEER']), getAllRegistrations);
 router.post('/admin/checkin/:ticketId', authenticateJWT, requireRole(['VOLUNTEER']), checkInTicket);
+router.post('/admin/checkin', authenticateJWT, requireRole(['VOLUNTEER']), checkInTicket);
+router.post('/checkin/:ticketId', authenticateJWT, requireRole(['VOLUNTEER']), checkInTicket);
+router.post('/checkin', authenticateJWT, requireRole(['VOLUNTEER']), checkInTicket);
 router.get('/admin/export-csv', authenticateJWT, requireRole(['VOLUNTEER']), exportRegistrationsCsv);
 
 export default router;

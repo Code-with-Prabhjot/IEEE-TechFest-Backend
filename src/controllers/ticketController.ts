@@ -16,6 +16,11 @@ export const registerForEvent = async (req: Request, res: Response): Promise<voi
       return;
     }
 
+    if (!eventName || typeof eventName !== 'string') {
+      res.status(400).json({ error: 'Event name is required.' });
+      return;
+    }
+
     // Dynamic Pricing Logic (Solo vs Team)
     let totalAmount = isTeam ? 600 : 200; 
 
@@ -56,7 +61,7 @@ export const registerForEvent = async (req: Request, res: Response): Promise<voi
       data: {
         userId: leaderId,
         eventName,
-        isTeam,
+        isTeam: Boolean(isTeam),
         totalAmount,
         teamMembers: {
           create: teamMembersData
@@ -69,7 +74,7 @@ export const registerForEvent = async (req: Request, res: Response): Promise<voi
       message: `${eventName} registration successful! Proceed to payment.`, 
       ticketId: newTicket.id,
       totalAmount: newTicket.totalAmount,
-      team: newTicket.teamMembers.map((tm: any) => tm.user.email) // Strict typing added here!
+      team: newTicket.teamMembers.map((tm: any) => tm.user.email)
     });
   } catch (error) {
     console.error("Registration Error:", error);
@@ -86,7 +91,6 @@ export const getMyTicket = async (req: Request, res: Response): Promise<void> =>
       return;
     }
 
-    // CHANGED: We now use findMany instead of findUnique to get all their event passes!
     const tickets = await prisma.ticket.findMany({
       where: { userId },
       include: { teamMembers: { include: { user: true } } }
@@ -99,6 +103,7 @@ export const getMyTicket = async (req: Request, res: Response): Promise<void> =>
 
     res.status(200).json({ tickets });
   } catch (error) {
+    console.error("Fetch Tickets Error:", error);
     res.status(500).json({ error: 'Internal server error while fetching tickets.' });
   }
 };
@@ -107,10 +112,14 @@ export const getMyTicket = async (req: Request, res: Response): Promise<void> =>
 export const getAllRegistrations = async (req: Request, res: Response): Promise<void> => {
   try {
     const registrations = await prisma.ticket.findMany({
-      include: { user: { select: { name: true, email: true, role: true } } },
+      include: { 
+        user: { select: { name: true, email: true, role: true } },
+        teamMembers: { include: { user: { select: { name: true, email: true } } } }
+      },
     });
     res.status(200).json({ count: registrations.length, registrations });
   } catch (error) {
+    console.error("Get All Registrations Error:", error);
     res.status(500).json({ error: 'Internal server error while fetching registrations.' });
   }
 };
@@ -119,14 +128,17 @@ export const getAllRegistrations = async (req: Request, res: Response): Promise<
 export const simulatePayment = async (req: Request, res: Response): Promise<void> => {
   try {
     const userId = req.user?.id;
-    // THE FIX: Explicitly cast ticketId as a string
-    const ticketId = req.params.ticketId as string;
+    const ticketId = (req.params.ticketId || req.body.ticketId) as string;
 
-    // Use this inside your findUnique or findMany block
+    if (!ticketId) {
+      res.status(400).json({ error: 'Ticket ID is required.' });
+      return;
+    }
+
     const ticket = await prisma.ticket.findUnique({
       where: { id: ticketId },
       include: {
-        user: true, // If this is still red, hover over 'user' and see if it gives a quick-fix
+        user: true,
         teamMembers: {
           include: {
             user: true
@@ -148,14 +160,21 @@ export const simulatePayment = async (req: Request, res: Response): Promise<void
       return;
     }
 
-    // Update to COMPLETED
+    // Generate dynamic QR Code Data URL
+    const qrDataUrl = await QRCode.toDataURL(ticketId);
+
+    // Update to COMPLETED with QR Code
     const paidTicket = await prisma.ticket.update({
       where: { id: ticketId },
-      data: { paymentStatus: 'COMPLETED' },
+      data: { 
+        paymentStatus: 'COMPLETED',
+        qrCode: qrDataUrl
+      },
     });
 
     res.status(200).json({ message: 'Payment successful!', ticket: paidTicket });
   } catch (error) {
+    console.error("Payment Error:", error);
     res.status(500).json({ error: 'Internal server error during payment.' });
   }
 };
@@ -164,7 +183,12 @@ export const simulatePayment = async (req: Request, res: Response): Promise<void
 export const checkInTicket = async (req: Request, res: Response): Promise<void> => {
   try {
     const volunteerId = req.user?.id;
-    const ticketId = req.params.ticketId as string;
+    const ticketId = (req.params.ticketId || req.body.ticketId) as string;
+
+    if (!ticketId) {
+      res.status(400).json({ error: 'Ticket ID is required.' });
+      return;
+    }
 
     const ticket = await prisma.ticket.findUnique({ where: { id: ticketId } });
 
@@ -192,17 +216,18 @@ export const checkInTicket = async (req: Request, res: Response): Promise<void> 
       },
     });
 
-    // --- DAY 4: SECURITY AUDIT LOG ---
+    // Security Audit Log
     await prisma.auditLog.create({
       data: {
         action: 'TICKET_CHECK_IN',
         details: `Ticket ${ticketId} successfully scanned and admitted.`,
-        performedBy: volunteerId as string,
+        performedBy: (volunteerId || 'SYSTEM') as string,
       },
     });
 
     res.status(200).json({ message: 'Check-in successful! Student granted entry.', ticket: checkedInTicket });
   } catch (error) {
+    console.error("Check-in Error:", error);
     res.status(500).json({ error: 'Internal server error during check-in.' });
   }
 };
@@ -214,25 +239,20 @@ export const exportRegistrationsCsv = async (req: Request, res: Response): Promi
       include: { user: true },
     });
 
-    // 1. Create the CSV Header row
     let csv = 'Ticket ID,Student Name,Email,Payment Status,Checked In,Check-in Time\n';
 
-    // 2. Loop through all tickets and add them as rows
     tickets.forEach(ticket => {
-      // We wrap text in quotes just in case someone has a comma in their name!
       const name = `"${ticket.user.name}"`; 
       const email = `"${ticket.user.email}"`;
       const checkInTime = ticket.checkInTime ? ticket.checkInTime.toISOString() : 'N/A';
-      
       csv += `${ticket.id},${name},${email},${ticket.paymentStatus},${ticket.isCheckedIn},${checkInTime}\n`;
     });
 
-    // 3. Tell the client to download this as a file instead of showing JSON
     res.header('Content-Type', 'text/csv');
     res.attachment('techfest_registrations.csv');
     res.status(200).send(csv);
-
   } catch (error) {
+    console.error("Export CSV Error:", error);
     res.status(500).json({ error: 'Internal server error during CSV export.' });
   }
 };

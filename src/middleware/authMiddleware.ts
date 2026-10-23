@@ -3,7 +3,7 @@ import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { AuthUser } from '../types';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'fallback_secret';
+const getJwtSecret = (): string => process.env.JWT_SECRET || 'fallback_secret';
 
 // Guard 1: Are you logged in?
 export const authenticateJWT = (req: Request, res: Response, next: NextFunction): void => {
@@ -17,7 +17,7 @@ export const authenticateJWT = (req: Request, res: Response, next: NextFunction)
   const token = authHeader.split(' ')[1];
 
   try {
-    const decoded = jwt.verify(token, JWT_SECRET) as AuthUser;
+    const decoded = jwt.verify(token, getJwtSecret()) as AuthUser;
     req.user = decoded; // Attach the user info to the request
     next(); // Let them pass
   } catch (error) {

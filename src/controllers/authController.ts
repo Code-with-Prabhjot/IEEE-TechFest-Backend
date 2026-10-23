@@ -6,41 +6,55 @@ import jwt from 'jsonwebtoken';
 import { registerSchema, loginSchema } from '../utils/validation';
 
 const prisma = new PrismaClient();
-const JWT_SECRET = process.env.JWT_SECRET || 'fallback_secret';
+const getJwtSecret = (): string => process.env.JWT_SECRET || 'fallback_secret';
 
 export const register = async (req: Request, res: Response): Promise<void> => {
   try {
-    // Notice we added 'secretKey' to what we extract from the body
-    const { name, email, password, role, secretKey } = req.body;
+    // 1. Validate request body against schema
+    const parseResult = registerSchema.safeParse(req.body);
+    if (!parseResult.success) {
+      res.status(400).json({ error: parseResult.error.issues[0]?.message || 'Invalid input data' });
+      return;
+    }
 
-    // --- SECURITY PATCH: Block unauthorized volunteers ---
+    const { name, email, password } = parseResult.data;
+    const role = parseResult.data.role || 'STUDENT';
+    const providedKey = req.body.secretKey || req.body.adminKey;
+
+    // --- SECURITY: Block unauthorized volunteers ---
     if (role === 'VOLUNTEER') {
-      if (secretKey !== process.env.VOLUNTEER_SECRET_KEY) {
+      const validSecretKeys = [
+        process.env.VOLUNTEER_SECRET_KEY,
+        process.env.VOLUNTEER_MASTER_KEY
+      ].filter(Boolean);
+
+      if (!providedKey || !validSecretKeys.includes(providedKey)) {
         res.status(403).json({ error: 'Forbidden: Invalid Volunteer Secret Key.' });
         return;
       }
     }
 
-    // Check if user already exists
+    // 2. Check if user already exists
     const existingUser = await prisma.user.findUnique({ where: { email } });
     if (existingUser) {
       res.status(409).json({ error: 'User with this email already exists' });
       return;
     }
 
-    // Hash the password and save the user
+    // 3. Hash the password and save the user
     const hashedPassword = await bcrypt.hash(password, 10);
     const newUser = await prisma.user.create({
       data: {
         name,
         email,
         password: hashedPassword,
-        role: role || 'STUDENT', // Defaults to STUDENT if left blank
+        role,
       },
     });
 
     res.status(201).json({ message: 'User registered successfully', userId: newUser.id });
   } catch (error) {
+    console.error('Registration Error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };
@@ -50,7 +64,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
     // 1. Validate data
     const parseResult = loginSchema.safeParse(req.body);
     if (!parseResult.success) {
-      res.status(400).json({ error: parseResult.error.issues[0].message });
+      res.status(400).json({ error: parseResult.error.issues[0]?.message || 'Invalid email or password format' });
       return;
     }
 
@@ -73,7 +87,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
     // 4. Generate the digital key (JWT Token)
     const token = jwt.sign(
       { id: user.id, email: user.email, role: user.role },
-      JWT_SECRET,
+      getJwtSecret(),
       { expiresIn: '24h' }
     );
 
@@ -83,6 +97,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
       user: { id: user.id, name: user.name, email: user.email, role: user.role },
     });
   } catch (error) {
+    console.error('Login Error:', error);
     res.status(500).json({ error: 'Internal server error during login' });
   }
 };
