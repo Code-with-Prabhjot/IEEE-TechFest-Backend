@@ -201,9 +201,10 @@
                 <input type="text" id="auth-reg-name" placeholder="Full Name" class="w-full px-4 py-3 rounded-lg input-cyber" onkeydown="if(event.key === 'Enter') document.getElementById('auth-reg-email').focus()">
                 <input type="email" id="auth-reg-email" placeholder="Student Email" class="w-full px-4 py-3 rounded-lg input-cyber" onkeydown="if(event.key === 'Enter') document.getElementById('auth-reg-pass').focus()">
                 <div class="relative">
-                    <input type="password" id="auth-reg-pass" placeholder="Create Password" class="w-full px-4 py-3 rounded-lg input-cyber pr-10" onkeydown="if(event.key === 'Enter') handleRegister()">
+                    <input type="password" id="auth-reg-pass" placeholder="Password (min. 6 characters)" class="w-full px-4 py-3 rounded-lg input-cyber pr-10" onkeydown="if(event.key === 'Enter') handleRegister()">
                     <button onclick="toggleEye('auth-reg-pass')" class="absolute right-3 top-3 text-slate-400 hover:text-white">👁️</button>
                 </div>
+                <p class="text-xs text-slate-400 mt-1">Password must be at least 6 characters</p>
                 <button onclick="handleRegister()" class="w-full neon-btn py-3 rounded-lg text-white font-bold">Create Account</button>
             </div>
             <p id="auth-status" class="mt-4 text-center font-bold text-sm"></p>
@@ -236,9 +237,10 @@
                     <button onclick="toggleEye('org-reg-pass')" class="absolute right-3 top-3 text-slate-400 hover:text-white">👁️</button>
                 </div>
                 <div class="relative">
-                    <input type="password" id="org-reg-key" placeholder="Master Security Key" class="w-full px-4 py-3 rounded-lg bg-red-900/20 border-red-500/50 focus:border-red-500 text-white outline-none pr-10" onkeydown="if(event.key === 'Enter') handleOrgRegister()">
+                    <input type="password" id="org-reg-key" placeholder="Master Security Key (Demo: ieee-master-guard-2026)" class="w-full px-4 py-3 rounded-lg bg-red-900/20 border-red-500/50 focus:border-red-500 text-white outline-none pr-10" onkeydown="if(event.key === 'Enter') handleOrgRegister()">
                     <button onclick="toggleEye('org-reg-key')" class="absolute right-3 top-3 text-slate-400 hover:text-white">👁️</button>
                 </div>
+                <p class="text-xs text-slate-400 mt-1">Reviewer Demo Key: <code class="text-pink-400 bg-slate-800 px-1 py-0.5 rounded">ieee-master-guard-2026</code></p>
                 <button onclick="handleOrgRegister()" class="w-full bg-red-600 hover:bg-red-500 py-3 rounded-lg text-white font-bold transition">Authorize Guard</button>
             </div>
             <p id="org-status" class="mt-4 text-center font-bold"></p>
@@ -346,11 +348,12 @@
             const status = document.getElementById('auth-status');
 
             try {
-                const res = await fetch('/api/auth/register', {
+                const res = await fetch(`${API_BASE}/api/auth/register`, {
                     method: 'POST', headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ name, email, password, role: 'STUDENT' })
                 });
-                if(!res.ok) throw new Error("Registration failed. Email exists.");
+                const data = await res.json().catch(() => ({}));
+                if(!res.ok) throw new Error(data.error || "Registration failed");
                 
                 showStatus(status, "✅ Account created! Please Login.", "green-400");
                 document.getElementById('auth-reg-pass').value = '';
@@ -364,12 +367,12 @@
             const status = document.getElementById('auth-status');
 
             try {
-                const res = await fetch('/api/auth/login', {
+                const res = await fetch(`${API_BASE}/api/auth/login`, {
                     method: 'POST', headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email, password })
                 });
-                const data = await res.json();
-                if(!res.ok) throw new Error("Invalid credentials");
+                const data = await res.json().catch(() => ({}));
+                if(!res.ok) throw new Error(data.error || "Invalid credentials");
                 
                 studentToken = data.token;
                 localStorage.setItem('token', studentToken);
@@ -587,11 +590,11 @@
             const status = document.getElementById('org-status');
 
             try {
-                const res = await fetch('/api/auth/register', {
+                const res = await fetch(`${API_BASE}/api/auth/register`, {
                     method: 'POST', headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ name, email, password, role: 'VOLUNTEER', secretKey })
                 });
-                const data = await res.json();
+                const data = await res.json().catch(() => ({}));
                 if(!res.ok) throw new Error(data.error || "Registration blocked.");
                 showStatus(status, "✅ Guard Authorized! Please Login.", "green-400");
                 setTimeout(() => { toggleOrg('login'); status.innerText = ''; }, 1500);
@@ -603,11 +606,11 @@
             const password = document.getElementById('org-pass').value;
             const status = document.getElementById('org-status');
             try {
-                const res = await fetch('/api/auth/login', {
+                const res = await fetch(`${API_BASE}/api/auth/login`, {
                     method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password })
                 });
-                const data = await res.json();
-                if(!res.ok) throw new Error("Invalid Auth");
+                const data = await res.json().catch(() => ({}));
+                if(!res.ok) throw new Error(data.error || "Invalid Auth");
                 orgToken = data.token;
                 
                 // Update Nav for Organizer
